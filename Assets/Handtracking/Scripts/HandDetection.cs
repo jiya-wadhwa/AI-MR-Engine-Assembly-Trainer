@@ -89,9 +89,28 @@ public class HandDetection : MonoBehaviour
         m_LandmarkerInput.Dispose();
     }
 
+    //Vector3 ImageToWorld(Vector2 position)
+    //{
+    //    return (position - 0.5f * new Vector2(m_TextureWidth, m_TextureHeight))
+    //           / m_TextureHeight;
+    //}
+
+    //Vector3 ImageToWorld(Vector2 position)
+    //{
+    //    float x = (position.x / m_TextureWidth) * 2f - 1f;
+    //    float y = 1f - (position.y / m_TextureHeight) * 2f;
+
+    //    return new Vector3(x, y, 0f);
+    //}
     Vector3 ImageToWorld(Vector2 position)
     {
-        return (position - 0.5f * new Vector2(m_TextureWidth, m_TextureHeight)) / m_TextureHeight;
+        //float vx = position.x / m_TextureWidth;
+        float vx = 1f - (position.x / m_TextureWidth);
+        float vy = 1f - (position.y / m_TextureHeight);
+
+        // Camera se 50 cm aage ek virtual plane
+        return Camera.main.ViewportToWorldPoint(
+            new Vector3(vx, vy, 0.18f));
     }
 
     async Awaitable Detect(Texture texture)
@@ -149,12 +168,44 @@ public class HandDetection : MonoBehaviour
         var landmarksAwaitable = (m_HandLandmarkerWorker.PeekOutput("Identity") as Tensor<float>).ReadbackAndCloneAsync();
         using var landmarks = await landmarksAwaitable;
 
+        //for (var i = 0; i < k_NumKeypoints; i++)
+        //{
+        //    var position_ImageSpace = BlazeUtils.mul(M2, new float2(landmarks[3 * i + 0], landmarks[3 * i + 1]));
+
+        //    Vector3 position_WorldSpace = ImageToWorld(position_ImageSpace) + new Vector3(0, 0, landmarks[3 * i + 2] / m_TextureHeight);
+        //    handPreview.SetKeypoint(i, true, position_WorldSpace);
+        //}
         for (var i = 0; i < k_NumKeypoints; i++)
         {
-            var position_ImageSpace = BlazeUtils.mul(M2, new float2(landmarks[3 * i + 0], landmarks[3 * i + 1]));
+            var position_ImageSpace =
+                BlazeUtils.mul(M2,
+                new float2(
+                landmarks[3 * i + 0],
+                landmarks[3 * i + 1]));
 
-            Vector3 position_WorldSpace = ImageToWorld(position_ImageSpace) + new Vector3(0, 0, landmarks[3 * i + 2] / m_TextureHeight);
+            //Vector3 position_WorldSpace =
+            //    ImageToWorld(position_ImageSpace) +
+            //    new Vector3(
+            //        0,
+            //        0,
+            //        landmarks[3 * i + 2] / m_TextureHeight);
+
+            Vector3 position_WorldSpace =
+    ImageToWorld(position_ImageSpace);
+
+
             handPreview.SetKeypoint(i, true, position_WorldSpace);
+
+            if (i == 0 && DebugOverlay.Instance != null)
+            {
+                DebugOverlay.Instance.SetText(
+                    $"Texture : {texture.width} x {texture.height}\n" +
+                    $"Screen  : {Screen.width} x {Screen.height}\n" +
+                    $"LM0 Raw : {landmarks[0]:F1}, {landmarks[1]:F1}, {landmarks[2]:F1}\n" +
+                    $"Image   : {position_ImageSpace.x:F1}, {position_ImageSpace.y:F1}\n" +
+                    $"World   : {position_WorldSpace.x:F2}, {position_WorldSpace.y:F2}"
+                );
+            }
         }
     }
 

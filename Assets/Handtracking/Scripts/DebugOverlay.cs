@@ -5,18 +5,16 @@ public class DebugOverlay : MonoBehaviour
 {
     public static DebugOverlay Instance;
 
-    public TextMeshProUGUI debugText;
+    public TMP_Text debugText;
 
     void Awake()
     {
         Instance = this;
     }
 
-    public void Log(string message)
+    public void SetText(string text)
     {
-        Debug.Log(message);
-
         if (debugText != null)
-            debugText.text = message;
+            debugText.text = text;
     }
 }
