@@ -48,7 +48,7 @@ public class EngineSpawner : MonoBehaviour
             reticle.transform.rotation
         );
 
-        obj.transform.localScale = Vector3.one * 0.1f;
+        obj.transform.localScale = Vector3.one * 2f;
 
         spawned = true;
 

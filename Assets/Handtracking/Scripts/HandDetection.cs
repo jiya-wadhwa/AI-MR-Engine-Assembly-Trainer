@@ -3,8 +3,12 @@ using Unity.Mathematics;
 using Unity.InferenceEngine;
 using UnityEngine;
 
+
 public class HandDetection : MonoBehaviour
 {
+    public static HandDetection Instance;
+    public Vector3 IndexFingerTip { get; private set; }
+    public Vector3 ThumbTip { get; private set; }
     public HandPreview handPreview;
     public ImagePreview imagePreview;
     public Texture2D imageTexture;
@@ -33,6 +37,7 @@ public class HandDetection : MonoBehaviour
 
     public async void Start()
     {
+        Instance = this;
         if (cameraProvider == null)
         {
             Debug.LogError("Camera Provider not assigned!");
@@ -110,7 +115,7 @@ public class HandDetection : MonoBehaviour
 
         // Camera se 50 cm aage ek virtual plane
         return Camera.main.ViewportToWorldPoint(
-            new Vector3(vx, vy, 0.18f));
+            new Vector3(vx, vy, 0.22f));
     }
 
     async Awaitable Detect(Texture texture)
@@ -177,6 +182,8 @@ public class HandDetection : MonoBehaviour
         //}
         for (var i = 0; i < k_NumKeypoints; i++)
         {
+            
+
             var position_ImageSpace =
                 BlazeUtils.mul(M2,
                 new float2(
@@ -206,6 +213,16 @@ public class HandDetection : MonoBehaviour
                     $"World   : {position_WorldSpace.x:F2}, {position_WorldSpace.y:F2}"
                 );
             }
+            if (i == 4)
+            {
+                ThumbTip = position_WorldSpace;
+            }
+
+            if (i == 8)
+            {
+                IndexFingerTip = position_WorldSpace;
+            }
+
         }
     }
 
